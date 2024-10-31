@@ -1,5 +1,5 @@
 module delay #(
-    parameter WIDTH = 10    // no of bits in delay counter
+    parameter WIDTH =7    // no of bits in delay counter
 )(
     input   logic               clk,        // clock signal
     input   logic               rst,        // reset signal

@@ -5,32 +5,33 @@
 
 #include <memory>
 
+Vdut* top;
+VerilatedVcdC* tfp;
+unsigned int ticks = 0;
 class TestDut : public ::testing::Test
 {
 public:
     void SetUp() override
     {
-        top = std::make_unique<Vdut>();
-        tfp = std::make_unique<VerilatedVcdC>();
-
-        Verilated::traceEverOn(true);
-        top->trace(tfp.get(), 99);
-        tfp->open("waveform.vcd");
-
         initializeInputs();
+        runReset();
     }
 
     void TearDown() override
     {
-        top->final();
-        tfp->close();
     }
 
     void initializeInputs()
     {
         top->clk = 0;
         top->rst = 0;
-        top->en = 1;
+    }
+
+    void runReset()
+    {
+        top->rst = 1;
+        runSimulation();
+        top->rst = 0;
     }
 
     // Runs the simulation for a clock cycle, evaluates the DUT, dumps waveform.
@@ -51,9 +52,6 @@ public:
     }
 
 protected:
-    unsigned int ticks = 0;
-    std::unique_ptr<Vdut> top;
-    std::unique_ptr<VerilatedVcdC> tfp;
 };
 
 TEST_F(TestDut, InitialStateTest)
@@ -96,7 +94,21 @@ TEST_F(TestDut, SequenceTest)
 
 int main(int argc, char **argv)
 {
+    top = new Vdut;
+    tfp = new VerilatedVcdC;
+
+    Verilated::traceEverOn(true);
+    top->trace(tfp, 99);
+    tfp->open("waveform.vcd");
+
     testing::InitGoogleTest(&argc, argv);
     auto res = RUN_ALL_TESTS();
+
+    top->final();
+    tfp->close();
+
+    delete top;
+    delete tfp;
+
     return res;
 }
